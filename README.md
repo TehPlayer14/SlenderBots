@@ -9,6 +9,6 @@ TF2 Attributes
 Map compatibility:
 
 Hospice - OK
-Underground Good
+Underground Good (With updated navmesh)
 
 Others- Unknow or not working

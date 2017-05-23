@@ -10,6 +10,7 @@ TF2 Attributes plugin
 Map compatibility:
 
 Hospice - OK
+
 Underground Good (With updated navmesh in navmesh fix folder)
 
 Others- Unknow or not working

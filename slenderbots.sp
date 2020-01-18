@@ -413,12 +413,16 @@ stock FindPlayingBots()
 }
 public Action:Timer_BotStartSprint(Handle:timer, any:Bot)
 {
-	CreateTimer(4.0, Timer_BotStopSprint, Bot);
-	FakeClientCommand( Bot, "+sprint" );
+	if (IsValidClient(Bot))
+	{
+		CreateTimer(4.0, Timer_BotStopSprint, Bot);
+		FakeClientCommand( Bot, "+sprint" );
+	}
 }
 public Action:Timer_BotStopSprint(Handle:timer, any:Bot)
 {
-	FakeClientCommand( Bot, "-sprint" );
+	if (IsValidClient(Bot))
+		FakeClientCommand( Bot, "-sprint" );
 }
 //public OnEntityCreated( iEntity, const String:strClassname[] )
 //{

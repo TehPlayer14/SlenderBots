@@ -64,6 +64,7 @@ public EventHook_FlagStuff(Handle:event, const String:name[], bool:dontBroadcast
 	{
 		new iClient = GetEventInt(event, "player");
 		ICarrier = iClient;
+		SetEventBroadcast(event, true);
 		//new i3 = -1;
 		//while ((i3 = FindEntityByClassname(i3, "item_teamflag")) != -1)
 		//	if(!IsFakeClient(iClient))
@@ -72,6 +73,7 @@ public EventHook_FlagStuff(Handle:event, const String:name[], bool:dontBroadcast
 	if (GetEventInt(event, "eventtype") == TF_FLAGEVENT_DROPPED )
 	{
 		ICarrier = -1;
+		SetEventBroadcast(event, true);
 		//new iClient = GetClientOfUserId(GetEventInt(event, "userid"));
 		//new i3 = -1;
 		//while ((i3 = FindEntityByClassname(i3, "item_teamflag")) != -1)

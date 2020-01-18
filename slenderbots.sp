@@ -62,24 +62,24 @@ public EventHook_FlagStuff(Handle:event, const String:name[], bool:dontBroadcast
 {
 	if (GetEventInt(event, "eventtype") == TF_FLAGEVENT_PICKEDUP )
 	{
-		new client = GetEventInt(event, "player");
-		ICarrier = client;
+		new iClient = GetEventInt(event, "player");
+		ICarrier = iClient;
 		//new i3 = -1;
 		//while ((i3 = FindEntityByClassname(i3, "item_teamflag")) != -1)
-		//	if(!IsFakeClient(client))
+		//	if(!IsFakeClient(iClient))
 		//		AcceptEntityInput( i3, "ForceDrop" );
 	}
 	if (GetEventInt(event, "eventtype") == TF_FLAGEVENT_DROPPED )
 	{
 		ICarrier = -1;
-		//new client = GetClientOfUserId(GetEventInt(event, "userid"));
+		//new iClient = GetClientOfUserId(GetEventInt(event, "userid"));
 		//new i3 = -1;
 		//while ((i3 = FindEntityByClassname(i3, "item_teamflag")) != -1)
 		//{
 		//	if(IsPickable[i3])
 		//		AcceptEntityInput(i3, "Disable");
 		//}
-		//new client = GetClientUserId(GetEventInt(event, "player"));
+		//new iClient = GetClientUserId(GetEventInt(event, "player"));
 		if(bDebugEnabled)
 			PrintToChatAll("flag dropped");
 		
@@ -106,18 +106,22 @@ stock TeleportDroppedFlagToBot()//
 {
 	for (new i = 1; i <= MaxClients; i++)
 	{
-		if(IsClientInGame(i))
+		if(IsValidClient(i))
+		{
 			if(IsFakeClient(i) && GetClientTeam(i) == _:TFTeam_Red)
 			{
 				new iflag = FindPickableFlag();
-				new Float:Position[3];
-				GetClientAbsOrigin(i, Position);
-				TeleportEntity(iflag, Position, NULL_VECTOR, NULL_VECTOR);
-				return;
-				//PrintToChatAll("flag teleported");
+				if (IsValidEntity(iflag) && iflag > 0)
+				{
+					new Float:Position[3];
+					GetClientAbsOrigin(i, Position);
+					TeleportEntity(iflag, Position, NULL_VECTOR, NULL_VECTOR);
+					return;
+					//PrintToChatAll("flag teleported");
+				}
 			}
+		}
 	}
-
 }
 
 stock HookEscapeEventUnder()
@@ -148,21 +152,24 @@ stock HookEscapeEvent()
 }
 stock bool:IsValidSF2Page(page)
 {
-	decl Float:pos[3]={0.0,0.0,0.0}
-	
-	new Float:flPos5[3];
-	GetEntPropVector( page, Prop_Send, "m_vecOrigin", flPos5 );
-	new Float:flDistance2 = GetVectorDistance(pos, flPos5);
-	if(flDistance2 < 10)
-		return false;
-	if(!IsValidEntity(page))
-		return false;
-	decl String:strName[50];
-	GetEntPropString(page, Prop_Data, "m_iName", strName, sizeof(strName));
-	if(StrContains(strName, "sf2_page", false) != -1 && strcmp(strName, "sf2_page_model") != 0)
-		return true;
-	else
-		return false;
+	if (IsValidEntity(page) && page > 0)
+	{
+		decl Float:pos[3]={0.0,0.0,0.0}
+		
+		new Float:flPos5[3];
+		GetEntPropVector( page, Prop_Send, "m_vecOrigin", flPos5 );
+		new Float:flDistance2 = GetVectorDistance(pos, flPos5);
+		if(flDistance2 < 10)
+			return false;
+		if(!IsValidEntity(page))
+			return false;
+		decl String:strName[50];
+		GetEntPropString(page, Prop_Data, "m_iName", strName, sizeof(strName));
+		if(StrContains(strName, "sf2_page", false) != -1 && strcmp(strName, "sf2_page_model") != 0)
+			return true;
+		else
+			return false;
+	}
 }
 
 stock bool:WasValidSF2Page(page)
@@ -219,7 +226,7 @@ stock MakeBotsSprint()
 {
 	for (new i = 1; i <= MaxClients; i++)
 	{
-		if(IsClientInGame(i))
+		if(IsValidClient(i))
 			if(IsFakeClient(i) && GetClientTeam(i) == _:TFTeam_Red)
 			{
 					CreateTimer(0.01, Timer_SSprint, i);
@@ -251,7 +258,7 @@ public Action:RoundStart(Handle:event, const String:name[], bool: dontBroadcast)
 stock SlayBots()
 {
 	for (new i = 1; i <= MaxClients; i++)
-		if(IsClientInGame(i))
+		if(IsValidClient(i))
 			if(IsFakeClient(i) && GetClientTeam(i) == _:TFTeam_Red)
 				SDKHooks_TakeDamage(i, 0, 0, 99999.0, DMG_GENERIC|DMG_PREVENT_PHYSICS_FORCE);
 }
@@ -385,7 +392,7 @@ stock FindPlayingBots()
 {
 	for (new i = 1; i <= MaxClients; i++)
 	{
-		if(IsClientInGame(i))
+		if(IsValidClient(i))
 			if(IsFakeClient(i) && GetClientTeam(i) == _:TFTeam_Red)
 			{
 				SDKHooks_TakeDamage(i, 0, 0, 99999.0, DMG_GENERIC|DMG_PREVENT_PHYSICS_FORCE);
@@ -439,7 +446,7 @@ stock UpdateBlockers()
 	AcceptEntityInput(  pointinter, "RecomputeBlockers" );
 	
 	for (new i = 1; i <= MaxClients; i++)
-		if(IsClientInGame(i))
+		if(IsValidClient(i))
 			if(IsFakeClient(i) && GetClientTeam(i) == _:TFTeam_Red)
 			{
 				new i5 = -1;
@@ -495,7 +502,7 @@ stock SpawnBlockBrush(Slenderhitbox)//fix this
 	SetEntProp(entindex, Prop_Send, "m_fEffects", enteffects);
 	
 	new Float:Position[3];
-	//GetClientAbsOrigin(client, Position);
+	//GetClientAbsOrigin(iClient, Position);
 	GetEntPropVector(Slenderhitbox, Prop_Send, "m_vecOrigin", Position);
 	TeleportEntity(entindex, Position, NULL_VECTOR, NULL_VECTOR);
 	PrintToChatAll("Created the blocker %f %f %f",Position[0],Position[1],Position[2]);
@@ -524,6 +531,9 @@ public Action:Timer_OnEntCreated(Handle:timer, any:ient)
 }
 public Action:Timer_BotSafety(Handle:timer, any:Bot)
 {
+	if(!IsValidClient(Bot))
+		return Plugin_Stop;
+		
 	if(GetClientTeam(Bot) != _:TFTeam_Red)
 		return Plugin_Stop;
 	checkbossdist(Bot);
@@ -531,7 +541,7 @@ public Action:Timer_BotSafety(Handle:timer, any:Bot)
 		
 	return Plugin_Continue;
 }
-stock checkbossdist(client)
+stock checkbossdist(iClient)
 {
 	new i5 = -1;
 	while((i5 = FindEntityByClassname(i5, "monster_generic")) != -1)//base boss just no
@@ -539,15 +549,15 @@ stock checkbossdist(client)
 		if(IsValidEntity(i5))
 		{
 			new Float:flPos1[3];
-			GetClientAbsOrigin(client, flPos1);
+			GetClientAbsOrigin(iClient, flPos1);
 			
 			new Float:flPos2[3];
 			GetEntPropVector( i5, Prop_Send, "m_vecOrigin", flPos2 );
 			new Float:flDistance = GetVectorDistance(flPos1, flPos2);
 			if(flDistance < 700)
 			{
-				FakeClientCommand( client, "+sprint" );
-				CreateTimer(6.0, Timer_StopSprint, client);
+				FakeClientCommand( iClient, "+sprint" );
+				CreateTimer(6.0, Timer_StopSprint, iClient);
 			}
 		}
 	}
@@ -556,6 +566,9 @@ stock checkbossdist(client)
 		
 public Action:Timer_BotStatus(Handle:timer, any:Bot)
 {
+	if(!IsValidClient(Bot))
+		return Plugin_Stop;
+	
 	if(GetClientTeam(Bot) != _:TFTeam_Red)
 		return Plugin_Stop;
 		
@@ -567,32 +580,35 @@ public Action:Timer_BotStatus(Handle:timer, any:Bot)
 	
 	return Plugin_Continue;
 }
-FindNearestPage(client)
+FindNearestPage(iClient)
 {
-	new Float:pVec[3];
-	new Float:nVec[3];
-	GetClientEyePosition(client, pVec); 
-	new found = -1;
-	new Float:MAX_DIST = 10000.0;
-	new Float:found_dist = MAX_DIST;
-	new Float:aux_dist;
-	new i5 = -1;
-	while((i5 = FindEntityByClassname(i5, "prop_dynamic")) != -1)
+	if (IsValidClient(iClient))
 	{
-		//PrintToChatAll("PAG FND");
-		if(IsValidSF2Page(i5)) // && !IsTargetedPage2[i5]
+		new Float:pVec[3];
+		new Float:nVec[3];
+		GetClientEyePosition(iClient, pVec); 
+		new found = -1;
+		new Float:MAX_DIST = 10000.0;
+		new Float:found_dist = MAX_DIST;
+		new Float:aux_dist;
+		new i5 = -1;
+		while((i5 = FindEntityByClassname(i5, "prop_dynamic")) != -1)
 		{
-			GetEntPropVector(i5, Prop_Send, "m_vecOrigin", nVec);
-			//GetClientEyePosition(i, nVec);
-			aux_dist = GetVectorDistance(pVec, nVec, false);
-			if(aux_dist < found_dist)
+			//PrintToChatAll("PAG FND");
+			if(IsValidSF2Page(i5)) // && !IsTargetedPage2[i5]
 			{
-					found = i5;
-					found_dist = aux_dist;
+				GetEntPropVector(i5, Prop_Send, "m_vecOrigin", nVec);
+				//GetClientEyePosition(i, nVec);
+				aux_dist = GetVectorDistance(pVec, nVec, false);
+				if(aux_dist < found_dist)
+				{
+						found = i5;
+						found_dist = aux_dist;
+				}
 			}
 		}
+		return found;
 	}
-	return found;
 }
 stock TeleportFuncToPage()
 {
@@ -615,8 +631,8 @@ stock TeleportFuncToPage()
 			}
 			if(!IsThereAny1stBot())
 			{
-				new client = GetRandomPlayer(2);
-				new i6 = FindNearestPage(client);
+				new iClient = GetRandomPlayer(2);
+				new i6 = FindNearestPage(iClient);
 				GetEntPropVector(i6, Prop_Send, "m_vecOrigin", position);
 				TeleportEntity(FUNCT, position, NULL_VECTOR, NULL_VECTOR);
 				//PrintToChatAll("teleported funccap");
@@ -636,7 +652,7 @@ stock TeleportFuncToPage()
 stock bool:IsThereAny1stBot()
 {
 	for( new i = 1; i <= MaxClients; i++ )
-		if(IsClientInGame(i))
+		if(IsValidClient(i))
 			if(IsFakeClient( i ))
 				return true;
 	return false;
@@ -660,6 +676,8 @@ stock CheckPageCount()
 }
 public OnEntityDestroyed(ent)
 {	
+	if (IsValidEntity(ent) && ent > 0)
+	{
 		decl String:cls[20];
 		GetEntityClassname(ent, cls, sizeof(cls));
 		if (StrEqual(cls, "prop_dynamic", false))
@@ -668,31 +686,32 @@ public OnEntityDestroyed(ent)
 					CheckPageCount();
 		if (ent != -1 && StrEqual(cls, "monster_generic", false))
 			UpdateBlockers();
-	//if(WasValidSF2Page(ent))
-	//{
-		if(IsTargetedPage[ent])
-			IsTargetedPage[ent] = false;
-		if(IsTargetedPage2[ent])
-			IsTargetedPage2[ent] = false;
-		//PrintToChatAll("page down");
-	
-	/*	PrintToChatAll("page down");
-		new i5 = -1;
+		//if(WasValidSF2Page(ent))
+		//{
+			if(IsTargetedPage[ent])
+				IsTargetedPage[ent] = false;
+			if(IsTargetedPage2[ent])
+				IsTargetedPage2[ent] = false;
+			//PrintToChatAll("page down");
 		
-		new Float:flPos1[3];
-		GetEntPropVector( ent, Prop_Send, "m_vecOrigin", flPos1 );
-		
-		while((i5 = FindEntityByClassname(i5, "item_teamflag")) != -1)
-		{
-			new Float:flPos2[3];
-			GetEntPropVector( i5, Prop_Send, "m_vecOrigin", flPos2 );
-			new Float:flDistance = GetVectorDistance(flPos1, flPos2);
-			if(flDistance < 190 && IsPickable[i5])
+		/*	PrintToChatAll("page down");
+			new i5 = -1;
+			
+			new Float:flPos1[3];
+			GetEntPropVector( ent, Prop_Send, "m_vecOrigin", flPos1 );
+			
+			while((i5 = FindEntityByClassname(i5, "item_teamflag")) != -1)
 			{
-				TeleportFuncToPage();
-			}
-		}*/		
-	//}
+				new Float:flPos2[3];
+				GetEntPropVector( i5, Prop_Send, "m_vecOrigin", flPos2 );
+				new Float:flDistance = GetVectorDistance(flPos1, flPos2);
+				if(flDistance < 190 && IsPickable[i5])
+				{
+					TeleportFuncToPage();
+				}
+			}*/		
+		//}
+	}
 }
 
 /*stock TeleportFuncToPage()
@@ -765,7 +784,7 @@ GetRandomPlayer(team)
     new clients[MaxClients+1], clientCount;
     for (new i = 1; i <= MaxClients; i++)
 	{
-        if (IsClientInGame(i) && GetClientTeam(i) == team)
+        if (IsValidClient(i) && GetClientTeam(i) == team)
 		{
 			if(!IsThereAny1stBot())
 			{
@@ -783,7 +802,7 @@ stock ReturnNonCarrier()
 {
 	for (new i = 1; i <= MaxClients; i++)
 	{
-		if(IsClientInGame(i))
+		if(IsValidClient(i))
 			if(IsFakeClient(i) && GetClientTeam(i) == _:TFTeam_Red && ICarrier != i)
 			{	
 				return i;
@@ -797,44 +816,48 @@ stock TeleportFlagToPage()
 	if(bEscape)
 		return;
 	new FLAGT = FindEntityByClassname(-1,"item_teamflag");
-	//new client = GetRandomPlayer(2);
-	new client = ReturnNonCarrier();
-	new i5 = FindNearestPage(client);
-	decl Float:position[3];
 	
-	//PrintToChatAll("PAG FND");
-	if(IsValidSF2Page(i5) && IsValidEntity(i5) && client != -1)
+	if (IsValidEntity(FLAGT) && FLAGT > 0)
 	{
-		if(!IsTargetedPage2[i5] || iPageCounter == 1)
+		//new iClient = GetRandomPlayer(2);
+		new iClient = ReturnNonCarrier();
+		new i5 = FindNearestPage(iClient);
+		decl Float:position[3];
+		
+		//PrintToChatAll("PAG FND");
+		if(IsValidSF2Page(i5) && IsValidEntity(i5) && iClient != -1)
 		{
-			GetEntPropVector(i5, Prop_Send, "m_vecOrigin", position);
-			//position[2] += 5; 
-			if(bEscape)
-				return;
-			TeleportEntity(FLAGT, position, NULL_VECTOR, NULL_VECTOR);
-		
-			IsTargetedPage[i5] = true;
-		
-			//PrintToChatAll("Flag was teleported");
-			//break;
+			if(!IsTargetedPage2[i5] || iPageCounter == 1)
+			{
+				GetEntPropVector(i5, Prop_Send, "m_vecOrigin", position);
+				//position[2] += 5; 
+				if(bEscape)
+					return;
+				TeleportEntity(FLAGT, position, NULL_VECTOR, NULL_VECTOR);
+			
+				IsTargetedPage[i5] = true;
+			
+				//PrintToChatAll("Flag was teleported");
+				//break;
+			}
 		}
 	}
 }
 stock bool:IsThereAny2ndBot()
 {
 	for( new i = 1; i <= MaxClients; i++ )
-		if(IsClientInGame(i))
+		if(IsValidClient(i))
 			if(IsFakeClient( i ))
-				if(Is2ndBot(client))
+				if(Is2ndBot(iClient))
 					return true;
 	return false;
 }
-stock CheckButtonDist(client)
+stock CheckButtonDist(iClient)
 {
 	if(!UnderGround)
 		return;
 	new Float:flPos1[3];
-	GetClientAbsOrigin(client, flPos1);
+	GetClientAbsOrigin(iClient, flPos1);
 	new i5 = -1;
 	while((i5 = FindEntityByClassname(i5, "func_button")) != -1)
 	{
@@ -847,7 +870,7 @@ stock CheckButtonDist(client)
 			new Float:flDistance = GetVectorDistance(flPos1, flPos2)
 			if(flDistance < 100)
 			{
-				IsBotReadyToHitButton[client] = true;
+				IsBotReadyToHitButton[iClient] = true;
 				//PrintToChatAll("Bot is near 100 units");
 				break;
 			}
@@ -855,10 +878,10 @@ stock CheckButtonDist(client)
 	}
 }
 
-stock CheckFlagDist(client)
+stock CheckFlagDist(iClient)
 {
 	new i3 = -1;
-	if(!Is2ndBot(client))
+	if(!Is2ndBot(iClient))
 	{
 		//PrintToChatAll("exec thing 2nd");
 		while ((i3 = FindEntityByClassname(i3, "item_teamflag")) != -1)
@@ -866,59 +889,61 @@ stock CheckFlagDist(client)
 			if(!IsPickable[i3])
 			{
 				new Float:flPos1[3];
-				GetClientAbsOrigin(client, flPos1);
+				GetClientAbsOrigin(iClient, flPos1);
 	
 				new Float:flPos2[3];
 				GetEntPropVector( i3, Prop_Send, "m_vecOrigin", flPos2 );
 				new Float:flDistance = GetVectorDistance(flPos1, flPos2);
 				if(flDistance < 125)
 				{
-					IsBotReadyToPickUpPage[client] = true;
+					IsBotReadyToPickUpPage[iClient] = true;
 					//PrintToChatAll("Bot is near 133 units");
-					CreateTimer(1.0, Timer_SSprint, client);
-					CreateTimer(3.1, Timer_StopSprint, client);
+					CreateTimer(1.0, Timer_SSprint, iClient);
+					CreateTimer(3.1, Timer_StopSprint, iClient);
 					break;
 				}
 			}
 		}
 	}
-	if(Is2ndBot(client))
+	if(Is2ndBot(iClient))
 	{
 		//PrintToChatAll("exec thing 2nd");
 		i3 = -1;
 		while ((i3 = FindEntityByClassname(i3, "func_capturezone")) != -1)
 		{
 			new Float:flPos1[3];
-			GetClientAbsOrigin(client, flPos1);
+			GetClientAbsOrigin(iClient, flPos1);
 	
 			new Float:flPos2[3];
 			GetEntPropVector( i3, Prop_Send, "m_vecOrigin", flPos2 );
 			new Float:flDistance = GetVectorDistance(flPos1, flPos2);
 			if(flDistance < 125)
 			{
-				IsBotReadyToPickUpPage[client] = true;
+				IsBotReadyToPickUpPage[iClient] = true;
 				//PrintToChatAll("Bot is near 133 units");
-				CreateTimer(1.0, Timer_SSprint, client);
-				CreateTimer(6.0, Timer_StopSprint, client);
+				CreateTimer(1.0, Timer_SSprint, iClient);
+				CreateTimer(6.0, Timer_StopSprint, iClient);
 				break;
 			}
 		}
 	}
 }
-public Action:Timer_SSprint(Handle:timer, any:client)
+public Action:Timer_SSprint(Handle:timer, any:iClient)
 {
-	FakeClientCommand( client, "+sprint" );
+	if (IsValidClient(iClient))
+		FakeClientCommand( iClient, "+sprint" );
 }
-public Action:Timer_StopSprint(Handle:timer, any:client)
+public Action:Timer_StopSprint(Handle:timer, any:iClient)
 {
-	FakeClientCommand( client, "-sprint" );
+	if (IsValidClient(iClient))
+		FakeClientCommand( iClient, "-sprint" );
 }
 
-public Action:OnFlagTouch(point, client)
+public Action:OnFlagTouch(point, iClient)
 {
-	for(client=1;client<=MaxClients;client++)
+	for(iClient=1;iClient<=MaxClients;iClient++)
 	{
-		if(IsClientInGame(client))
+		if(IsValidClient(iClient))
 		{
 			return Plugin_Handled;
 		}
@@ -994,7 +1019,7 @@ stock SpawnPickableFlag()
 		SetEntProp(teamflags, Prop_Send, "m_bGlowEnabled", 0);
 		for( new i = 1; i <= MaxClients; i++ )
 		{
-			if(IsClientInGame(i))
+			if(IsValidClient(i))
 			{
 			
 				if(IsFakeClient( i ))
@@ -1008,15 +1033,16 @@ stock SpawnPickableFlag()
 	}
 }
 
-stock LookAtTarget(any:client, any:target)//
+stock LookAtTarget(any:iClient, any:target)//
 { 
     new Float:angles[3], Float:clientEyes[3], Float:targetEyes[3], Float:resultant[3]; 
-    GetClientEyePosition(client, clientEyes);
-    if(target > 0 && target <= MaxClients && IsClientInGame(target)){
-    GetClientEyePosition(target, targetEyes);
-    }else{
-    GetEntPropVector(target, Prop_Send, "m_vecOrigin", targetEyes);
-    }
+    GetClientEyePosition(iClient, clientEyes);
+	
+    if (target > 0 && target <= MaxClients && IsValidClient(target))
+    	GetClientEyePosition(target, targetEyes);
+    else if (IsValidEntity(target) && target > 0)
+    	GetEntPropVector(target, Prop_Send, "m_vecOrigin", targetEyes);
+		
     MakeVectorFromPoints(targetEyes, clientEyes, resultant); 
     GetVectorAngles(resultant, angles); 
     if(angles[0] >= 270){ 
@@ -1028,58 +1054,58 @@ stock LookAtTarget(any:client, any:target)//
         } 
     } 
     angles[1] -= 180; 
-    TeleportEntity(client, NULL_VECTOR, angles, NULL_VECTOR); 
+    TeleportEntity(iClient, NULL_VECTOR, angles, NULL_VECTOR); 
 }
-stock bool:Is2ndBot(client)
+stock bool:Is2ndBot(iClient)
 {
-	//if(bool:GetEntProp(client, Prop_Send, "m_bGlowEnabled") == true)
-	if(ICarrier == client)
+	//if(bool:GetEntProp(iClient, Prop_Send, "m_bGlowEnabled") == true)
+	if(ICarrier == iClient)
 		return true;
 		
 	return false;
 }
 
-public Action:OnPlayerRunCmd( client, &iButtons, &iImpulse, Float:flVelocity[3], Float:flAngles[3], &iWeapon )//attack stock
+public Action:OnPlayerRunCmd( iClient, &iButtons, &iImpulse, Float:flVelocity[3], Float:flAngles[3], &iWeapon )//attack stock
 {
-	if(!IsFakeClient(client) || GetClientTeam(client) != _:TFTeam_Red || !IsPlayerAlive(client))
+	if(!IsFakeClient(iClient) || GetClientTeam(iClient) != _:TFTeam_Red || !IsPlayerAlive(iClient))
 		return Plugin_Continue;
-//	if(IsBotInSetup[client])
+//	if(IsBotInSetup[iClient])
 //	{
 //		PrintToChatAll("Setup triger");
-//		FakeClientCommand( client, "sm_flashlight" );
-//		IsBotInSetup[client] = false;
+//		FakeClientCommand( iClient, "sm_flashlight" );
+//		IsBotInSetup[iClient] = false;
 //		return Plugin_Changed; 
 //	}
-//	if( !IsPlayerAlive(client) )
+//	if( !IsPlayerAlive(iClient) )
 //		return Plugin_Continue;
-	if(bEscape && IsBotReadyToHitButton[client])
+	if(bEscape && IsBotReadyToHitButton[iClient])
 	{
 		new Button = FindUnderButton();
 		
-		LookAtTarget(client, Button)
+		LookAtTarget(iClient, Button)
 		iButtons |= IN_ATTACK;
-		IsBotReadyToHitButton[client] = false;
+		IsBotReadyToHitButton[iClient] = false;
 		return Plugin_Changed; 
 	}
-	if(!bEscape && IsBotReadyToPickUpPage[client] && !Is2ndBot(client))
+	if(!bEscape && IsBotReadyToPickUpPage[iClient] && !Is2ndBot(iClient))
 	{
-		//RunAwayFromBoss(client);
+		//RunAwayFromBoss(iClient);
 		new FLAGT = FindNonPickAbleFlag();
-		LookAtTarget(client, FLAGT)
+		LookAtTarget(iClient, FLAGT)
 		
 
 		iButtons |= IN_ATTACK;
-		IsBotReadyToPickUpPage[client] = false;
+		IsBotReadyToPickUpPage[iClient] = false;
 		TeleportFlagToPage();
 		return Plugin_Changed; 
 	}
-	if(!bEscape && IsBotReadyToPickUpPage[client] && Is2ndBot(client))
+	if(!bEscape && IsBotReadyToPickUpPage[iClient] && Is2ndBot(iClient))
 	{
 		new FUNCT = FindEntityByClassname(-1,"func_capturezone");
-		LookAtTarget(client, FUNCT)
+		LookAtTarget(iClient, FUNCT)
 
 		iButtons |= IN_ATTACK;
-		IsBotReadyToPickUpPage[client] = false;
+		IsBotReadyToPickUpPage[iClient] = false;
 		CreateTimer(1.5, Timer_TeleFuncp);
 		TeleportFuncToPage();
 		return Plugin_Changed; 
@@ -1114,4 +1140,13 @@ stock FindNonPickAbleFlag()
 			return i3;
 	}
 	return -1;	
+}
+
+stock bool IsValidClient(int iClient, bool bReplay = true)
+{
+	if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient))
+		return false;
+	if (bReplay && (IsClientSourceTV(iClient) || IsClientReplay(iClient)))
+		return false;
+	return true;
 }
